@@ -48,12 +48,12 @@ public class CShow extends ASingleEntry
                     clip.setContents(ss, nop);
                     copied = true;
                     CConsole.message("Password copied to clipboard");
-                    CConsole.message("Will delete after 30 seconds...");
+                    CConsole.message("Will remove from clipboard in 30 seconds...");
                     try { Thread.sleep(30*1000); }
                     catch (InterruptedException ie) {}
                     ss = new StringSelection("");
                     clip.setContents(ss, nop);
-                    CConsole.message("...deleted from clipboard");
+                    CConsole.message("...removed from clipboard");
                 }
             }
         }

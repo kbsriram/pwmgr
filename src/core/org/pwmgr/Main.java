@@ -3,6 +3,7 @@ package org.pwmgr;
 import org.pwmgr.util.CConfig;
 import org.pwmgr.util.CConsole;
 import org.pwmgr.command.CInit;
+import org.pwmgr.command.CRemaster;
 import org.pwmgr.command.CAdd;
 import org.pwmgr.command.CShow;
 import org.pwmgr.command.CList;
@@ -48,6 +49,7 @@ public class Main
             switch (config.getCommand()) {
             case ADD: CAdd.execute(config, pw); break;
             case LIST: CList.execute(config, pw); break;
+            case REMASTER: CRemaster.execute(config, pw); break;
 
             case SHOW:
                 ASingleEntry.execute(config, pw, new CShow()); break;

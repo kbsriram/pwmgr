@@ -258,17 +258,22 @@ public class CConfig
     public enum Command
     {
         SHOW("show", "<entry> -- Show name and copy password for <entry>."),
-        INIT("init", "Initialize a new password database."),
+        LIST("list", "[entry] -- List all names, optionally matching [entry]."),
+
+
         ADD("add", "Add a new password entry."),
         EDIT("edit", "<entry> -- Modify an existing password entry."),
         REMOVE("remove", "<entry> -- Remove <entry> from database."),
-        LIST("list", "[entry] -- List all names, optionally matching [entry].");
+
+
+        INIT("init", "Initialize a new password database."),
+        REMASTER("remaster", "Generate a new database from current, with new keys.");
         Command(String v, String d) {m_v = v; m_d = d;}
+        public String getName() { return m_v; }
         private String m_v; private String m_d; 
     };
     public enum BooleanOption
     {
-        PRINT("print", "Print the result rather than copying to the clipboard"),
         HELP("help", "Dump this message");
         BooleanOption(String v, String d) {m_v = v; m_d = d;}
         private String m_v; private String m_d; 
@@ -281,6 +286,7 @@ public class CConfig
                "Specify the path to the encrypted private key");
         ArgOption(String v, String a, String d)
         {m_v = v; m_a = a; m_d = d;}
+        public String getName() { return m_v; }
         private String m_v; private String m_a; private String m_d;
     };
 

@@ -61,10 +61,14 @@ public class CInit
         config
             .setArgOption(CConfig.ArgOption.PUBLIC, root)
             .setArgOption(CConfig.ArgOption.PRIVATE, ppath);
-        init(config);
+
+        char[] pw = CConsole.readPassword("Master passphrase", true);
+        if (pw == null) { return; }
+
+        init(CDatabase.newDatabase(), config, pw);
     }
 
-    private final static void init(CConfig config)
+    final static void init(CDatabase db, CConfig config, char[] pw)
         throws IOException, JSONException
     {
         File rootf =
@@ -76,9 +80,6 @@ public class CInit
         }
 
         // Now generate keypair.
-        char[] pw = CConsole.readPassword("Master passphrase", true);
-        if (pw == null) { return; }
-
         CConsole.message("Generating keys. This may take a while...");
         PGPKeyRingGenerator krgen = CPGPUtils.generateKeyRingGenerator
             ("pwmgr", pw);
@@ -139,7 +140,6 @@ public class CInit
         ok = false;
         File pwdb = new File(rootf, CConfig.PWDB);
         try {
-            CDatabase db = CDatabase.newDatabase();
             db.save(config, skr, pw);
             ok = true;
             CConsole.message("Files generated successfully.");
@@ -168,7 +168,7 @@ public class CInit
         return ret;
     }
 
-    private final static boolean validatePrivatePath(String p)
+    final static boolean validatePrivatePath(String p)
     {
         if (p == null) { return false; }
         File f = new File(p);
@@ -181,7 +181,7 @@ public class CInit
         return false;
     }
 
-    private final static boolean validateDbRoot(String rootS)
+    final static boolean validateDbRoot(String rootS)
     {
         if (rootS == null) { return false; }
         File root = new File(rootS);
