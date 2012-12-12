@@ -6,6 +6,7 @@ import org.pwmgr.command.CInit;
 import org.pwmgr.command.CRemaster;
 import org.pwmgr.command.CAdd;
 import org.pwmgr.command.CShow;
+import org.pwmgr.command.CNotes;
 import org.pwmgr.command.CList;
 import org.pwmgr.command.CRemove;
 import org.pwmgr.command.CEdit;
@@ -53,6 +54,8 @@ public class Main
 
             case SHOW:
                 ASingleEntry.execute(config, pw, new CShow()); break;
+            case NOTES:
+                ASingleEntry.execute(config, pw, new CNotes()); break;
             case REMOVE:
                 ASingleEntry.execute(config, pw, new CRemove()); break;
             case EDIT:

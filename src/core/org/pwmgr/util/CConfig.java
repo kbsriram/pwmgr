@@ -258,6 +258,7 @@ public class CConfig
     public enum Command
     {
         SHOW("show", "<entry> -- Show name and copy password for <entry>."),
+        NOTES("notes", "<entry> -- Show name and notes for <entry>."),
         LIST("list", "[entry] -- List all names, optionally matching [entry]."),
 
 

@@ -60,6 +60,15 @@ public class CAdd
             CConsole.message("");
         } while (!CConsole.isYes("Proceed", false));
 
+        add(config, db, id, name, notes, epassword, pw);
+    }
+
+    final static void add
+        (CConfig config, CDatabase db,
+         String id, String name, String notes,
+         char[] epassword, char[] pw)
+        throws JSONException, IOException
+    {
         db.addEntry(id, name, notes, epassword);
         Arrays.fill(epassword, '.');
         db.save(config, pw);

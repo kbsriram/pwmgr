@@ -221,7 +221,7 @@ public class CPGPUtils
         (String id, char[] pass)
     { return generateKeyRingGenerator(id, pass, 0xff); }
 
-    final static PGPKeyRingGenerator generateKeyRingGenerator
+    public final static PGPKeyRingGenerator generateKeyRingGenerator
         (String id, char[] pass, int s2kcount)
     {
         try {

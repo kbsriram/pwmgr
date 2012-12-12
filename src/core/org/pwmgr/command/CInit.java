@@ -82,7 +82,7 @@ public class CInit
         // Now generate keypair.
         CConsole.message("Generating keys. This may take a while...");
         PGPKeyRingGenerator krgen = CPGPUtils.generateKeyRingGenerator
-            ("pwmgr", pw);
+            ("pwmgr", pw, 0x60);
 
         // Write out files.
 

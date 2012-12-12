@@ -128,6 +128,7 @@ public class CPGPUtilTest
             edata[i] = save;
         }
     }
+
     private void checkDecrypt
         (byte[] data, char[] pass, int id, PGPPublicKeyRing pkr)
         throws IOException
