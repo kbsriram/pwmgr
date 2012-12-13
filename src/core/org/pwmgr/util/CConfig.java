@@ -9,17 +9,21 @@ import java.util.HashMap;
 import java.io.File;
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.File;
 
 public class CConfig
 {
+    public static File getDefaultLocation()
+    { return new File(System.getProperty("user.home"), CONFIG_FILE); }
+
     public static CConfig getConfig(String[] args)
         throws IOException
     {
         Properties p = new Properties();
-        File dflt = new File(System.getProperty("user.home"),
-                               CONFIG_FILE);
+        File dflt = getDefaultLocation();
         if (dflt.canRead()) {
             BufferedReader br = new BufferedReader(new FileReader(dflt));
             try { p.load(br); }
@@ -244,6 +248,30 @@ public class CConfig
     { m_ao.put(ao, v); return this; }
     public List<String> getArgs()
     { return m_args; }
+    public void saveOptions(File path)
+        throws IOException
+    {
+        BufferedWriter bw = null;
+        boolean ok = false;
+        try {
+            bw = new BufferedWriter(new FileWriter(path));
+            Properties p = new Properties();
+            p.setProperty(ArgOption.PUBLIC.getName(),
+                          getArgOption(ArgOption.PUBLIC));
+            p.setProperty(ArgOption.PRIVATE.getName(),
+                          getArgOption(ArgOption.PRIVATE));
+            p.store(bw, null);
+            ok = true;
+        }
+        finally {
+            if (bw != null) {
+                try { bw.close(); }
+                catch (Throwable ign) {}
+            }
+            if (!ok) { path.delete(); }
+        }
+    }
+
     private void setCommand(Command c)
     { m_command = c; }
     private void setArgs(List<String> args)

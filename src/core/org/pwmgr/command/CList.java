@@ -20,23 +20,31 @@ import java.awt.Toolkit;
 import java.awt.HeadlessException;
 
 public class CList
+    implements ICommand
 {
-    public static void execute(CConfig config, char[] pw)
-        throws IOException, JSONException
+    public boolean checkArgs(CConfig config)
     {
         List<String> args = config.getArgs();
-        String key = "";
         if (args != null) {
             switch (args.size()) {
             case 0: break;
-            case 1: key = args.get(0); break;
+            case 1: break;
             default:
                 CConsole.error("list takes only one argument, an entry");
-                return;
+                return false;
             }
         }
+        return true;
+    }
 
-        CDatabase db = CDatabase.load(config, pw);
+    public void execute(CConfig config, CDatabase db, char[] pw)
+        throws IOException, JSONException
+    {
+        String key = "";
+        List<String> args = config.getArgs();
+        if ((args != null) && (args.size() == 1)) {
+            key = args.get(0);
+        }
 
         // First look for exact matches, then inexact matches.
         CDatabase.Entry e = db.getById(key);

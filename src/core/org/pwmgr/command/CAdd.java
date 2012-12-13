@@ -12,12 +12,14 @@ import java.util.Arrays;
 import java.security.SecureRandom;
 
 public class CAdd
+    implements ICommand
 {
-    public static void execute(CConfig config, char[] pw)
+    public boolean checkArgs(CConfig config)
+    { return true; }
+
+    public void execute(CConfig config, CDatabase db, char[] pw)
         throws IOException, JSONException
     {
-        CDatabase db = CDatabase.load(config, pw);
-
         String id;
         String name;
         String notes;

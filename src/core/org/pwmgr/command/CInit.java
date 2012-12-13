@@ -104,6 +104,7 @@ public class CInit
                 (bout.toByteArray(), out, pw,
                  CPGPUtils.getSigningSecretKey(skr), pw,
                  "_CONSOLE", new Date());
+
             ok = true;
         }
         finally {
@@ -142,11 +143,6 @@ public class CInit
         try {
             db.save(config, skr, pw);
             ok = true;
-            CConsole.message("Files generated successfully.");
-            CConsole.message("  Passwords under: "+rootf);
-            CConsole.message("  Private key file: "+privfile);
-            CConsole.message("");
-            CConsole.message("Remember to backup these files!");
         }
         finally {
             Arrays.fill(pw, '.');
@@ -155,6 +151,44 @@ public class CInit
                 pubfile.delete();
                 pwdb.delete();
             }
+        }
+
+        boolean write_config;
+        File conffile = CConfig.getDefaultLocation();
+        if (conffile.canRead()) {
+            write_config = CConsole.isYes
+                ("Update file path options under "+conffile, false);
+        }
+        else {
+            write_config = CConsole.isYes
+                ("Save file path options to "+conffile, true);
+        }
+        if (write_config) {
+            ok = false;
+            try {
+                config.saveOptions(conffile);
+                ok = true;
+            }
+            finally {
+                if (!ok) {
+                    privfile.delete();
+                    pubfile.delete();
+                    pwdb.delete();
+                }
+            }
+        }
+
+        CConsole.message("");
+        CConsole.message("Files generated successfully.");
+        CConsole.message("  Passwords under: "+rootf);
+        CConsole.message("  Private key file: "+privfile);
+        CConsole.message("");
+        CConsole.message("Please backup these files.");
+        if (write_config) {
+            CConsole.message
+                ("If you move these files around, also update your config file:");
+            CConsole.message
+                ("  "+conffile);
         }
     }
 

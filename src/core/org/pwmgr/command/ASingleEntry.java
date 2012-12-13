@@ -17,23 +17,29 @@ import java.util.Arrays;
 import java.util.List;
 
 public abstract class ASingleEntry
+    implements ICommand
 {
-    public static void execute(CConfig config, char[] pw, ASingleEntry h)
-        throws IOException, JSONException
+    public boolean checkArgs(CConfig config)
     {
         List<String> args = config.getArgs();
         if ((args == null) || (args.size() != 1)) {
-            CConsole.error(h.getMissingArgumentError());
-            return;
+            CConsole.error(getMissingArgumentError());
+            return false;
         }
+        return true;
+    }
 
-        CDatabase db = CDatabase.load(config, pw);
+    public void execute
+        (CConfig config, CDatabase db, char[] pw)
+        throws IOException, JSONException
+    {
+        List<String> args = config.getArgs();
 
         // First look for exact matches, then inexact matches.
         String id = args.get(0);
         CDatabase.Entry e = db.getById(id);
         if (e != null) {
-            h.handle(config, db, pw, e);
+            handle(config, db, pw, e);
             return;
         }
 
@@ -44,7 +50,7 @@ public abstract class ASingleEntry
             CConsole.error("No id matches '"+id+"'");
             return;
         case 1:
-            h.handle(config, db, pw, matches.get(0));
+            handle(config, db, pw, matches.get(0));
             return;
         default:
             CConsole.error("Multiple matches for '"+id+"'");
