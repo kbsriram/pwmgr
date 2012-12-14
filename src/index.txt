@@ -1,0 +1,331 @@
+#Pwmgr Guide
+
+Some background.
+
+I'm not thrilled with existing password managers. First, I want a
+simple command line application that just stores and retrieves
+passwords, and can work offline. Second, for its entire source code to
+be available, along with a well-documented on-disk format. Third, the
+main problem I anticipate is if my laptop is stolen, so I'd like to
+have form of two-factor authentication. Last, that it use well-tested
+frameworks so I don't have to worry about the security of the password
+manager itself.
+
+The closest candidate that I found was (> Keepass |
+http://keepass.info/ <), except that nearly like ever other password
+manager I researched, it directly used cryptographic primitives,
+leading to problems. For instance, (> this paper reveals weaknesses |
+http://www.6nelweb.com/bio/papers/pwvault-ESORICS12-ext.pdf <) not
+only in Keepass, but several other password managers.
+
+I also (> found | https://github.com/zerodogg/gpgpwd<) a (> few |
+http://git.zx2c4.com/password-store/about/<) tools that used (>OpenPGP
+| http://tools.ietf.org/html/rfc4880<) which seemed fine. But they
+were built on top of (>GnuPG | http://gnupg.org<), so it needed gpg as
+well as any associated tools to be present where I need to use
+it. Moreover they co-mingle gpg keys with the password manager keys,
+and there didn't seem to be a convenient way to place just the
+password manager keys on a different device.
+
+So I started to put together some java code using (>BouncyCastle |
+http://www.bouncycastle.org <) to manage an OpenPGP-encrypted database,
+and the result is (> pwmgr | https://github.com/kbsriram/pwmgr<). It
+is a free (libre) software application; and I hope you find it useful
+to you as well.
+
+##Using pwmgr
+
+First download (> pwmgr.jar |
+https://github.com/kbsriram/pwmgr/raw/master/dist/pwmgr.jar<) to any
+convenient location. In the following examples, I'll show how to use
+it on Mac OS X, though you should be able to do something similar on
+other platforms too.
+
+--
+$ (*java -jar pwmgr.jar -help*)
+Options:
+  -help               Dump this message
+  -public <dir>       Specify the directory containing the password database
+  -private <file>     Specify the path to the encrypted private key
+
+Commands:
+  show                <entry> -- Show name and copy password for <entry>.
+  notes               <entry> -- Show name and notes for <entry>.
+  list                [entry] -- List all names, optionally matching [entry].
+  add                 Add a new password entry.
+  edit                <entry> -- Modify an existing password entry.
+  remove              <entry> -- Remove <entry> from database.
+  init                Initialize a new password database.
+  remaster            Generate a new database from current, with new keys.
+$ 
+--
+
+This gives a list of things it can do. Pwmgr uses a public key to
+encrypt the password database, and the associated private key is
+encrypted with the master passphrase. So there are two separate sets
+of files involved. One is the database, and the second is the private
+key. (This lets you place the private keys on a separate device if you
+like, adding a "what you have" component to the "what you know" master
+passphrase.)
+
+Start by creating a fresh database, which also generates a key pair.
+
+--
+$ (*java -jar pwmgr.jar init*)
+Create password directory [/Users/kbs/pwmgr/db]: (*<ret>*)
+Create secret key [/Users/kbs/pwmgr/private.pgp]: (*<ret>*)
+
+  Passwords under  /Users/kbs/pwmgr/db
+  Secret key file  /Users/kbs/pwmgr/private.pgp
+
+Proceed? (Y/n) (*y*)
+Master passphrase: (*........*)
+Repeat:  (*........*)
+Generating keys. This may take a while...
+Save file path options to /Users/kbs/.pwmgr? (Y/n) (*y*)
+
+Files generated successfully.
+  Passwords under: /Users/kbs/pwmgr/db
+  Private key file: /Users/kbs/pwmgr/private.pgp
+
+Please backup these files.
+If you move these files around, also update your config file:
+  /Users/kbs/.pwmgr
+$ 
+--
+
+The ('init') command has some defaults to various paths, which you can
+change. When it is done, it also offers to save the paths to the
+password database and the private key to ('.pwmgr') so you don't have
+to provide them on the command line with the ('-public') and
+('-private') options. (Though you can always override anything in
+('.pwmgr') with the ('-public') and ('-private') options.)
+
+([media/keys.jpg]) What I've done (after making an offline backup of the
+private key) is to move the database to my Dropbox folder, and move
+the private key to a USB flash drive that I have attached to my
+(physical) keychain. Only the database is altered from now on, so
+keeping it on Dropbox is an easy way to synchronize it across machines
+while allowing me to use it offline as well. I plug in the thumb drive
+whenever I need to enter a password; and remove it once done.
+
+With this setup, losing either my flash drive or my laptop still keeps
+the password database safe. If I lose both at the same time, then the
+only protection is my master passphrase. The passphrase is
+key-stretched to the maximum that's possible in OpenPGP. Note however,
+there's no protection if there's a virus logging keystrokes etc on the
+machine, so you should never use this on an untrusted computer.
+
+On Mac OS X, the usb drive gets mounted to a consistent location. Once
+I move the files over, I update the ('.pwmgr') file to reflect the new
+locations.
+
+--
+$ (*cat ~/.pwmgr*)
+public=/Users/kbs/Dropbox/pwmgr/db
+private=/Volumes/PWMGR/private.pgp
+$ 
+--
+
+Also for convenience, I have a small shell script that lets me avoid
+typing in the entire command every time.
+
+--
+$ (*cat /usr/local/bin/pwmgr*)
+#!/bin/bash
+java -jar /Users/kbs/extbuilds/bin/pwmgr.jar $*
+$ 
+--
+
+Now you can add new passwords to the database.
+
+--
+$ (*pwmgr add*)
+Passphrase: (*........*)
+New id: (*example*)
+Username: (*site-username*)
+Autogenerate password? (Y/n) (*y*)
+Add notes? (y/N) (*n*)
+
+About to add this entry:
+    id: example
+  name: site-username
+
+Proceed? (y/N) (*y*)
+Saved example
+--
+
+You can choose your own password, or let it generate one for you.  If
+you let it generate a password, it uses java's secure random number to
+create an 18 character password that may include upper and lowercase
+alphabets, numbers, and a few special characters. You can also add
+additional notes to the entry (challenge questions and so forth.)
+
+To retrieve the password
+
+--
+$ (*pwmgr show example*)
+Passphrase: (*........*)
+   id: example
+ name: site-username
+Password copied to clipboard
+Will remove from clipboard in 30 seconds...
+--
+
+The password is copied to the clipboard, and you can paste it in
+wherever you need. The clipboard is deleted after a short interval.
+
+The ('list') command lists the names of all entries in the database,
+while the ('edit') and ('remove') commands let you do those operations
+on individual entries.
+
+Finally, should you be unlucky enough to lose your laptop or your usb
+key, how do you resecure your database?
+
+First, you needed to have taken a backup of your private key and of
+your password database! I'll assume you've copied your backups to your
+new machine. You then run the ('remaster') command, which creates a
+new public key pair to encrypt the database. In the following example,
+the location of the backups are provided through the ('-public') and
+('-private') arguments. If you copied them to the locations in your
+('.pwmgr') file, then you don't need to specify them on the command
+line.
+
+--
+$ (*pwmgr remaster -public backup/pwmgr/db -private backup/private.pgp*)
+Passphrase: (*........*)
+New password directory: (*/tmp/remaster/db*)
+New private file path: (*/tmp/remaster/private.pgp*)
+Change master passphrase? (y/N) (*y*)
+New master passphrase: (*........*)
+Repeat: (*........*)
+
+  New passwords under  : /tmp/remaster/db
+  New private key file : /tmp/remaster/private.pgp
+              Password : <changed>
+
+Proceed? (Y/n) (*y*)
+Generating keys. This may take a while...
+Update file path options under /Users/kbs/.pwmgr? (y/N) (*n*)
+
+Files generated successfully.
+  Passwords under: /tmp/remaster/db
+  Private key file: /tmp/remaster/private.pgp
+
+Please backup these files.
+$ 
+--
+
+You specify locations for your newly remastered database and private
+key; and you can choose to change your master password as well. Once
+done, you have a new set of files (just like after the ('init')
+command) and you can move them to any appropriate locations.
+
+##File format
+
+Pwmgr uses a signed and encrypted JSON file to manage the contents of
+the database, and this file is located at
+('<password_dir>/db.pgp'). Any time you do something that updates the
+database, it saves the previous database as ('prev_db.pgp'). So if
+something goes wrong, you can revert an operation by copying
+('prev_db.pgp') to ('db.pgp') file.
+
+Before describing the structure of the JSON file, how is it encrypted?
+It is encrypted and signed using the private key. If you have ('gpg'),
+you can examine it with:
+
+--
+$ (*gpg --list-packet db.pgp*)
+:pubkey enc packet: version 3, algo 2, keyid 2F2BAAE3F96FCC56
+	data: [4095 bits]
+:encrypted data packet:
+	length: 1480
+	mdc_method: 2
+gpg: encrypted with RSA-E key, ID F96FCC56
+gpg: decryption failed: secret key not available
+$ 
+--
+
+('gpg') won't have the private key of course, so it can only see that
+it's encrypted with some key.
+
+The private key file itself (('private.pgp') in the example above) is
+encrypted with the master passphrase, and signed. This is to allow
+pwmgr to check for any modifications to the file. Again, you can use
+('gpg') to look at the encrypted private key.
+
+--
+$ (* gpg --list-packet private.pgp *)
+:symkey enc packet: version 4, cipher 9, s2k 3, hash 8
+	salt 659dec6bf997946c, count 65011712 (255)
+gpg: AES256 encrypted data
+:encrypted data packet:
+	length: 5461
+	mdc_method: 2
+gpg: encrypted with 1 passphrase
+:compressed packet: algo=1
+:onepass_sig packet: keyid 8D336AF98D9AFE7A
+	version 3, sigclass 0x00, digest 8, pubkey 3, last=1
+:literal data packet:
+	mode b (62), created 1355436233, name="_CONSOLE",
+	raw data: 4838 bytes
+:signature packet: algo 3, keyid 8D336AF98D9AFE7A
+	version 4, created 1355436235, md5len 0, sigclass 0x00
+	digest algo 8, begin of digest 5b 01
+	hashed subpkt 2 len 4 (sig created 2012-12-13)
+	subpkt 16 len 8 (issuer key ID 8D336AF98D9AFE7A)
+	data: [4095 bits]
+$ 
+--
+
+The contents of this file are the private key (which is again
+encrypted using the standard OpenPGP format, and uses the same
+passphrase.)  You may also notice that the passphrase is key-stretched
+with the highest available iteration count 65,011,712. This number is
+actually the number of bytes processed, and works out to about two
+million iterations for SHA-256.  This should provide a decent margin
+of safety against dictionary attacks.
+
+Lastly, a copy of the public key is stored under
+('<password_dir>/public.pkr'). This is arguably redundant, but it does
+allow pwmgr to validate the private key file against the password
+database even before parsing the private key itself.
+
+The OpenPGP key used always has a master signing key, and a separate
+encryption subkey. RSA-4096 is used for public key encryption, AES-256
+used for symmetric encryption, and SHA-256 as the hash algorithm for
+signatures and key stretching (when applicable.)
+
+No password related information data is revealed in the on-disk files
+(other than the raw compressed size of the database.) The signatures
+on the files provide a strong check against attacks that modify either
+the secret key or the password database. But please note there is no
+protection if your computer already has a virus or a keylogger, they
+can simply capture your master passphrase and all the database
+files. Don't use it on an untrusted machine.
+
+The JSON file in ('db.pgp') is simple in structure and looks like
+this.
+
+--
+{
+   "version": 1,
+
+    "entries": {
+        "example": {
+            "created": 1355433775775, 
+            "id": "example", 
+            "modified": 1355433775775, 
+            "name": "site-username", 
+            "notes": "", 
+            "passwd": "xxxxxxxxx"
+        },
+        ...
+     }
+}
+--
+
+The ('entries') contains a hash, indexed by the id assigned to the
+entry; and contains one entry for each item of interest as shown
+above. The ('created') and ('modified') timestamps are longs,
+indicating the Unix epoch time in milliseconds.

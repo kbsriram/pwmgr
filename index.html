@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Pwmgr: A small OpenPGP-based password manager</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<h1>Pwmgr Guide</h1>
+
+<p>Some background.</p>
+
+<p>I'm not thrilled with existing password managers. First, I want a
+simple command line application that just stores and retrieves
+passwords, and can work offline. Second, for its entire source code to
+be available, along with a well-documented on-disk format. Third, the
+main problem I anticipate is if my laptop is stolen, so I'd like to
+have form of two-factor authentication. Last, that it use well-tested
+frameworks so I don't have to worry about the security of the password
+manager itself.</p>
+
+<p>The closest candidate that I found was <a href="http://keepass.info/">Keepass</a>, except that nearly like ever other password
+manager I researched, it directly used cryptographic primitives,
+leading to problems. For instance, <a href="http://www.6nelweb.com/bio/papers/pwvault-ESORICS12-ext.pdf">this paper reveals weaknesses</a> not
+only in Keepass, but several other password managers.</p>
+
+<p>I also <a href="https://github.com/zerodogg/gpgpwd">found</a> a <a href="http://git.zx2c4.com/password-store/about/">few</a> tools that used <a href="http://tools.ietf.org/html/rfc4880">OpenPGP</a> which seemed fine. But they
+were built on top of <a href="http://gnupg.org">GnuPG</a>, so it needed gpg as
+well as any associated tools to be present where I need to use
+it. Moreover they co-mingle gpg keys with the password manager keys,
+and there didn't seem to be a convenient way to place just the
+password manager keys on a different device.</p>
+
+<p>So I started to put together some java code using <a href="http://www.bouncycastle.org">BouncyCastle</a> to manage an OpenPGP-encrypted database,
+and the result is <a href="https://github.com/kbsriram/pwmgr">pwmgr</a>. It
+is a free (libre) software application; and I hope you find it useful
+to you as well.</p>
+
+<h2>Using pwmgr</h2>
+
+<p>First download <a href="https://github.com/kbsriram/pwmgr/raw/master/dist/pwmgr.jar">pwmgr.jar</a> to any
+convenient location. In the following examples, I'll show how to use
+it on Mac OS X, though you should be able to do something similar on
+other platforms too.</p>
+
+<pre>
+$ <strong>java -jar pwmgr.jar -help</strong>
+Options:
+  -help               Dump this message
+  -public &lt;dir&gt;       Specify the directory containing the password database
+  -private &lt;file&gt;     Specify the path to the encrypted private key
+
+Commands:
+  show                &lt;entry&gt; -- Show name and copy password for &lt;entry&gt;.
+  notes               &lt;entry&gt; -- Show name and notes for &lt;entry&gt;.
+  list                [entry] -- List all names, optionally matching [entry].
+  add                 Add a new password entry.
+  edit                &lt;entry&gt; -- Modify an existing password entry.
+  remove              &lt;entry&gt; -- Remove &lt;entry&gt; from database.
+  init                Initialize a new password database.
+  remaster            Generate a new database from current, with new keys.
+$ 
+</pre>
+
+<p>This gives a list of things it can do. Pwmgr uses a public key to
+encrypt the password database, and the associated private key is
+encrypted with the master passphrase. So there are two separate sets
+of files involved. One is the database, and the second is the private
+key. (This lets you place the private keys on a separate device if you
+like, adding a "what you have" component to the "what you know" master
+passphrase.)</p>
+
+<p>Start by creating a fresh database, which also generates a key pair.</p>
+
+<pre>
+$ <strong>java -jar pwmgr.jar init</strong>
+Create password directory [/Users/kbs/pwmgr/db]: <strong>&lt;ret&gt;</strong>
+Create secret key [/Users/kbs/pwmgr/private.pgp]: <strong>&lt;ret&gt;</strong>
+
+  Passwords under  /Users/kbs/pwmgr/db
+  Secret key file  /Users/kbs/pwmgr/private.pgp
+
+Proceed? (Y/n) <strong>y</strong>
+Master passphrase: <strong>........</strong>
+Repeat:  <strong>........</strong>
+Generating keys. This may take a while...
+Save file path options to /Users/kbs/.pwmgr? (Y/n) <strong>y</strong>
+
+Files generated successfully.
+  Passwords under: /Users/kbs/pwmgr/db
+  Private key file: /Users/kbs/pwmgr/private.pgp
+
+Please backup these files.
+If you move these files around, also update your config file:
+  /Users/kbs/.pwmgr
+$ 
+</pre>
+
+<p>The <tt>init</tt> command has some defaults to various paths, which you can
+change. When it is done, it also offers to save the paths to the
+password database and the private key to <tt>.pwmgr</tt> so you don't have
+to provide them on the command line with the <tt>-public</tt> and
+<tt>-private</tt> options. (Though you can always override anything in
+<tt>.pwmgr</tt> with the <tt>-public</tt> and <tt>-private</tt> options.)</p>
+
+<p><img class="half" src="media/keys.jpg"/> What I've done (after making an offline backup of the
+private key) is to move the database to my Dropbox folder, and move
+the private key to a USB flash drive that I have attached to my
+(physical) keychain. Only the database is altered from now on, so
+keeping it on Dropbox is an easy way to synchronize it across machines
+while allowing me to use it offline as well. I plug in the thumb drive
+whenever I need to enter a password; and remove it once done.</p>
+
+<p>With this setup, losing either my flash drive or my laptop still keeps
+the password database safe. If I lose both at the same time, then the
+only protection is my master passphrase. The passphrase is
+key-stretched to the maximum that's possible in OpenPGP. Note however,
+there's no protection if there's a virus logging keystrokes etc on the
+machine, so you should never use this on an untrusted computer.</p>
+
+<p>On Mac OS X, the usb drive gets mounted to a consistent location. Once
+I move the files over, I update the <tt>.pwmgr</tt> file to reflect the new
+locations.</p>
+
+<pre>
+$ <strong>cat ~/.pwmgr</strong>
+public=/Users/kbs/Dropbox/pwmgr/db
+private=/Volumes/PWMGR/private.pgp
+$ 
+</pre>
+
+<p>Also for convenience, I have a small shell script that lets me avoid
+typing in the entire command every time.</p>
+
+<pre>
+$ <strong>cat /usr/local/bin/pwmgr</strong>
+#!/bin/bash
+java -jar /Users/kbs/extbuilds/bin/pwmgr.jar $*
+$ 
+</pre>
+
+<p>Now you can add new passwords to the database.</p>
+
+<pre>
+$ <strong>pwmgr add</strong>
+Passphrase: <strong>........</strong>
+New id: <strong>example</strong>
+Username: <strong>site-username</strong>
+Autogenerate password? (Y/n) <strong>y</strong>
+Add notes? (y/N) <strong>n</strong>
+
+About to add this entry:
+    id: example
+  name: site-username
+
+Proceed? (y/N) <strong>y</strong>
+Saved example
+</pre>
+
+<p>You can choose your own password, or let it generate one for you.  If
+you let it generate a password, it uses java's secure random number to
+create an 18 character password that may include upper and lowercase
+alphabets, numbers, and a few special characters. You can also add
+additional notes to the entry (challenge questions and so forth.)</p>
+
+<p>To retrieve the password</p>
+
+<pre>
+$ <strong>pwmgr show example</strong>
+Passphrase: <strong>........</strong>
+   id: example
+ name: site-username
+Password copied to clipboard
+Will remove from clipboard in 30 seconds...
+</pre>
+
+<p>The password is copied to the clipboard, and you can paste it in
+wherever you need. The clipboard is deleted after a short interval.</p>
+
+<p>The <tt>list</tt> command lists the names of all entries in the database,
+while the <tt>edit</tt> and <tt>remove</tt> commands let you do those operations
+on individual entries.</p>
+
+<p>Finally, should you be unlucky enough to lose your laptop or your usb
+key, how do you resecure your database?</p>
+
+<p>First, you needed to have taken a backup of your private key and of
+your password database! I'll assume you've copied your backups to your
+new machine. You then run the <tt>remaster</tt> command, which creates a
+new public key pair to encrypt the database. In the following example,
+the location of the backups are provided through the <tt>-public</tt> and
+<tt>-private</tt> arguments. If you copied them to the locations in your
+<tt>.pwmgr</tt> file, then you don't need to specify them on the command
+line.</p>
+
+<pre>
+$ <strong>pwmgr remaster -public backup/pwmgr/db -private backup/private.pgp</strong>
+Passphrase: <strong>........</strong>
+New password directory: <strong>/tmp/remaster/db</strong>
+New private file path: <strong>/tmp/remaster/private.pgp</strong>
+Change master passphrase? (y/N) <strong>y</strong>
+New master passphrase: <strong>........</strong>
+Repeat: <strong>........</strong>
+
+  New passwords under  : /tmp/remaster/db
+  New private key file : /tmp/remaster/private.pgp
+              Password : &lt;changed&gt;
+
+Proceed? (Y/n) <strong>y</strong>
+Generating keys. This may take a while...
+Update file path options under /Users/kbs/.pwmgr? (y/N) <strong>n</strong>
+
+Files generated successfully.
+  Passwords under: /tmp/remaster/db
+  Private key file: /tmp/remaster/private.pgp
+
+Please backup these files.
+$ 
+</pre>
+
+<p>You specify locations for your newly remastered database and private
+key; and you can choose to change your master password as well. Once
+done, you have a new set of files (just like after the <tt>init</tt>
+command) and you can move them to any appropriate locations.</p>
+
+<h2>File format</h2>
+
+<p>Pwmgr uses a signed and encrypted JSON file to manage the contents of
+the database, and this file is located at
+<tt>&lt;password_dir&gt;/db.pgp</tt>. Any time you do something that updates the
+database, it saves the previous database as <tt>prev_db.pgp</tt>. So if
+something goes wrong, you can revert an operation by copying
+<tt>prev_db.pgp</tt> to <tt>db.pgp</tt> file.</p>
+
+<p>Before describing the structure of the JSON file, how is it encrypted?
+It is encrypted and signed using the private key. If you have <tt>gpg</tt>,
+you can examine it with:</p>
+
+<pre>
+$ <strong>gpg --list-packet db.pgp</strong>
+:pubkey enc packet: version 3, algo 2, keyid 2F2BAAE3F96FCC56
+	data: [4095 bits]
+:encrypted data packet:
+	length: 1480
+	mdc_method: 2
+gpg: encrypted with RSA-E key, ID F96FCC56
+gpg: decryption failed: secret key not available
+$ 
+</pre>
+
+<p><tt>gpg</tt> won't have the private key of course, so it can only see that
+it's encrypted with some key.</p>
+
+<p>The private key file itself (<tt>private.pgp</tt> in the example above) is
+encrypted with the master passphrase, and signed. This is to allow
+pwmgr to check for any modifications to the file. Again, you can use
+<tt>gpg</tt> to look at the encrypted private key.</p>
+
+<pre>
+$ <strong> gpg --list-packet private.pgp </strong>
+:symkey enc packet: version 4, cipher 9, s2k 3, hash 8
+	salt 659dec6bf997946c, count 65011712 (255)
+gpg: AES256 encrypted data
+:encrypted data packet:
+	length: 5461
+	mdc_method: 2
+gpg: encrypted with 1 passphrase
+:compressed packet: algo=1
+:onepass_sig packet: keyid 8D336AF98D9AFE7A
+	version 3, sigclass 0x00, digest 8, pubkey 3, last=1
+:literal data packet:
+	mode b (62), created 1355436233, name="_CONSOLE",
+	raw data: 4838 bytes
+:signature packet: algo 3, keyid 8D336AF98D9AFE7A
+	version 4, created 1355436235, md5len 0, sigclass 0x00
+	digest algo 8, begin of digest 5b 01
+	hashed subpkt 2 len 4 (sig created 2012-12-13)
+	subpkt 16 len 8 (issuer key ID 8D336AF98D9AFE7A)
+	data: [4095 bits]
+$ 
+</pre>
+
+<p>The contents of this file are the private key (which is again
+encrypted using the standard OpenPGP format, and uses the same
+passphrase.)  You may also notice that the passphrase is key-stretched
+with the highest available iteration count 65,011,712. This number is
+actually the number of bytes processed, and works out to about two
+million iterations for SHA-256.  This should provide a decent margin
+of safety against dictionary attacks.</p>
+
+<p>Lastly, a copy of the public key is stored under
+<tt>&lt;password_dir&gt;/public.pkr</tt>. This is arguably redundant, but it does
+allow pwmgr to validate the private key file against the password
+database even before parsing the private key itself.</p>
+
+<p>The OpenPGP key used always has a master signing key, and a separate
+encryption subkey. RSA-4096 is used for public key encryption, AES-256
+used for symmetric encryption, and SHA-256 as the hash algorithm for
+signatures and key stretching (when applicable.)</p>
+
+<p>No password related information data is revealed in the on-disk files
+(other than the raw compressed size of the database.) The signatures
+on the files provide a strong check against attacks that modify either
+the secret key or the password database. But please note there is no
+protection if your computer already has a virus or a keylogger, they
+can simply capture your master passphrase and all the database
+files. Don't use it on an untrusted machine.</p>
+
+<p>The JSON file in <tt>db.pgp</tt> is simple in structure and looks like
+this.</p>
+
+<pre>
+{
+   "version": 1,
+
+    "entries": {
+        "example": {
+            "created": 1355433775775, 
+            "id": "example", 
+            "modified": 1355433775775, 
+            "name": "site-username", 
+            "notes": "", 
+            "passwd": "xxxxxxxxx"
+        },
+        ...
+     }
+}
+</pre>
+
+<p>The <tt>entries</tt> contains a hash, indexed by the id assigned to the
+entry; and contains one entry for each item of interest as shown
+above. The <tt>created</tt> and <tt>modified</tt> timestamps are longs,
+indicating the Unix epoch time in milliseconds.
+</p>
+
+<p style="margin-top:2.75em; margin-left:-8%;text-align:right"><small>by <a href="https://plus.google.com/102207019656909757485?rel=author">KB Sriram <img src="https://lh5.googleusercontent.com/-9fHCOzZy0WI/AAAAAAAAAAI/AAAAAAAAAIk/fH4Ta6jcviI/s48-c-k/photo.jpg" style="height:3.4375em; float: right;margin-top:-2.175em; margin-left: 0.4em;"/> </a></small></p>
+</body>
+</html>
