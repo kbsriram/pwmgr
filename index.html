@@ -11,31 +11,32 @@
 
 <p>Some background.</p>
 
-<p>I'm not thrilled with existing password managers. First, I want a
-simple command line application that just stores and retrieves
-passwords, and can work offline. Second, for its entire source code to
-be available, along with a well-documented on-disk format. Third, the
-main problem I anticipate is if my laptop is stolen, so I'd like to
-have form of two-factor authentication. Last, that it use well-tested
-frameworks so I don't have to worry about the security of the password
-manager itself.</p>
+<p>I like password managers, but didn't find one that satisfied me
+entirely. First, I want a simple command line tool that just stores
+and retrieves passwords, and can work offline. Second, for its entire
+source code to be available, along with a well-documented on-disk
+format. Third, the main problem I foresee is my laptop being stolen, so
+I'd like to have sort of two-factor authentication. Last, that it use
+well-tested frameworks so I don't have to worry about the security of
+the password manager itself.</p>
 
-<p>The closest candidate that I found was <a href="http://keepass.info/">Keepass</a>, except that nearly like ever other password
-manager I researched, it directly used cryptographic primitives,
-leading to problems. For instance, <a href="http://www.6nelweb.com/bio/papers/pwvault-ESORICS12-ext.pdf">this paper reveals weaknesses</a> not
+<p><a href="http://keepass.info/">Keepass</a> was pretty decent, except that
+like nearly ever other password manager I found, it directly used
+cryptographic primitives, leading to problems. For instance, <a href="http://www.6nelweb.com/bio/papers/pwvault-ESORICS12-ext.pdf">this
+paper reveals weaknesses</a> not
 only in Keepass, but several other password managers.</p>
 
-<p>I also <a href="https://github.com/zerodogg/gpgpwd">found</a> a <a href="http://git.zx2c4.com/password-store/about/">few</a> tools that used <a href="http://tools.ietf.org/html/rfc4880">OpenPGP</a> which seemed fine. But they
-were built on top of <a href="http://gnupg.org">GnuPG</a>, so it needed gpg as
-well as any associated tools to be present where I need to use
-it. Moreover they co-mingle gpg keys with the password manager keys,
-and there didn't seem to be a convenient way to place just the
-password manager keys on a different device.</p>
+<p>I also <a href="https://github.com/zerodogg/gpgpwd">found</a> a <a href="http://git.zx2c4.com/password-store/about/">few</a> tools that used <a href="http://tools.ietf.org/html/rfc4880">OpenPGP</a> which seemed like a good
+idea. But they were built on top of <a href="http://gnupg.org">GnuPG</a>, so
+it needed gpg as well as any associated tools to be present where I
+need to use it. Moreover they co-mingle gpg keys with the password
+manager keys, and there didn't seem to be a convenient way to place
+just the password manager keys on a different device.</p>
 
-<p>So I started to put together some java code using <a href="http://www.bouncycastle.org">BouncyCastle</a> to manage an OpenPGP-encrypted database,
-and the result is <a href="https://github.com/kbsriram/pwmgr">pwmgr</a>. It
-is a free (libre) software application; and I hope you find it useful
-to you as well.</p>
+<p>At least on my machines, Java is universally available, so I started
+to put together some code using <a href="http://www.bouncycastle.org">BouncyCastle</a> to manage an OpenPGP-encrypted
+database, and the result is <a href="https://github.com/kbsriram/pwmgr">pwmgr</a>. It is a free (libre) software
+application; and I hope you find it useful as well.</p>
 
 <h2>Using pwmgr</h2>
 
@@ -119,7 +120,7 @@ key-stretched to the maximum that's possible in OpenPGP. Note however,
 there's no protection if there's a virus logging keystrokes etc on the
 machine, so you should never use this on an untrusted computer.</p>
 
-<p>On Mac OS X, the usb drive gets mounted to a consistent location. Once
+<p>On Mac OS X, the USB drive gets mounted to a consistent location. Once
 I move the files over, I update the <tt>.pwmgr</tt> file to reflect the new
 locations.</p>
 
@@ -182,7 +183,7 @@ wherever you need. The clipboard is deleted after a short interval.</p>
 while the <tt>edit</tt> and <tt>remove</tt> commands let you do those operations
 on individual entries.</p>
 
-<p>Finally, should you be unlucky enough to lose your laptop or your usb
+<p>Finally, should you be unlucky enough to lose your laptop or your USB
 key, how do you resecure your database?</p>
 
 <p>First, you needed to have taken a backup of your private key and of

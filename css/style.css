@@ -54,7 +54,7 @@ table {
 body {
     line-height: 1.375em;
     background-color: #fff;
-    color: #555;
+    color: #333;
     font-family: Georgia, Times, serif;
     width: 80%;
     margin-left: auto;
@@ -76,7 +76,7 @@ p {
     text-renderig: optimizeLegibility;
 }
 strong {
-    color: #000;
+    font-weight: bold;
 }
 
 em {

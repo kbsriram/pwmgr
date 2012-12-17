@@ -2,36 +2,37 @@
 
 Some background.
 
-I'm not thrilled with existing password managers. First, I want a
-simple command line application that just stores and retrieves
-passwords, and can work offline. Second, for its entire source code to
-be available, along with a well-documented on-disk format. Third, the
-main problem I anticipate is if my laptop is stolen, so I'd like to
-have form of two-factor authentication. Last, that it use well-tested
-frameworks so I don't have to worry about the security of the password
-manager itself.
+I like password managers, but didn't find one that satisfied me
+entirely. First, I want a simple command line tool that just stores
+and retrieves passwords, and can work offline. Second, for its entire
+source code to be available, along with a well-documented on-disk
+format. Third, the main problem I foresee is my laptop being stolen, so
+I'd like to have sort of two-factor authentication. Last, that it use
+well-tested frameworks so I don't have to worry about the security of
+the password manager itself.
 
-The closest candidate that I found was (> Keepass |
-http://keepass.info/ <), except that nearly like ever other password
-manager I researched, it directly used cryptographic primitives,
-leading to problems. For instance, (> this paper reveals weaknesses |
+(> Keepass | http://keepass.info/ <) was pretty decent, except that
+like nearly ever other password manager I found, it directly used
+cryptographic primitives, leading to problems. For instance, (> this
+paper reveals weaknesses |
 http://www.6nelweb.com/bio/papers/pwvault-ESORICS12-ext.pdf <) not
 only in Keepass, but several other password managers.
 
 I also (> found | https://github.com/zerodogg/gpgpwd<) a (> few |
 http://git.zx2c4.com/password-store/about/<) tools that used (>OpenPGP
-| http://tools.ietf.org/html/rfc4880<) which seemed fine. But they
-were built on top of (>GnuPG | http://gnupg.org<), so it needed gpg as
-well as any associated tools to be present where I need to use
-it. Moreover they co-mingle gpg keys with the password manager keys,
-and there didn't seem to be a convenient way to place just the
-password manager keys on a different device.
+| http://tools.ietf.org/html/rfc4880<) which seemed like a good
+idea. But they were built on top of (>GnuPG | http://gnupg.org<), so
+it needed gpg as well as any associated tools to be present where I
+need to use it. Moreover they co-mingle gpg keys with the password
+manager keys, and there didn't seem to be a convenient way to place
+just the password manager keys on a different device.
 
-So I started to put together some java code using (>BouncyCastle |
-http://www.bouncycastle.org <) to manage an OpenPGP-encrypted database,
-and the result is (> pwmgr | https://github.com/kbsriram/pwmgr<). It
-is a free (libre) software application; and I hope you find it useful
-to you as well.
+At least on my machines, Java is universally available, so I started
+to put together some code using (>BouncyCastle |
+http://www.bouncycastle.org <) to manage an OpenPGP-encrypted
+database, and the result is (> pwmgr |
+https://github.com/kbsriram/pwmgr<). It is a free (libre) software
+application; and I hope you find it useful as well.
 
 ##Using pwmgr
 
@@ -116,7 +117,7 @@ key-stretched to the maximum that's possible in OpenPGP. Note however,
 there's no protection if there's a virus logging keystrokes etc on the
 machine, so you should never use this on an untrusted computer.
 
-On Mac OS X, the usb drive gets mounted to a consistent location. Once
+On Mac OS X, the USB drive gets mounted to a consistent location. Once
 I move the files over, I update the ('.pwmgr') file to reflect the new
 locations.
 
@@ -179,7 +180,7 @@ The ('list') command lists the names of all entries in the database,
 while the ('edit') and ('remove') commands let you do those operations
 on individual entries.
 
-Finally, should you be unlucky enough to lose your laptop or your usb
+Finally, should you be unlucky enough to lose your laptop or your USB
 key, how do you resecure your database?
 
 First, you needed to have taken a backup of your private key and of
